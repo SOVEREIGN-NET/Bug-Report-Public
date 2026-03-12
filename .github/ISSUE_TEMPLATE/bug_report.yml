@@ -1,0 +1,143 @@
+name: Bug Report
+description: Submit a bug report to help us improve.
+title: "[BUG] "
+labels: ["bug", "triage"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Submit a Bug Report
+        Thank you for reporting an issue. Please fill in as much detail as possible so we can reproduce and fix it quickly.
+        > Fields marked with * are required.
+
+  - type: input
+    id: summary
+    attributes:
+      label: "* Bug Summary"
+      description: A short, clear description of the bug.
+      placeholder: "e.g. Clicking Submit causes a blank screen"
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: "* Steps to Reproduce"
+      description: Exact steps to trigger the bug.
+      placeholder: |
+        1. Go to '...'
+        2. Click '...'
+        3. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: "* Expected Behavior"
+      description: What should have happened?
+      placeholder: "The page should load successfully."
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: "* Actual Behavior"
+      description: What actually happened?
+      placeholder: "A blank white screen appears with no error message."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: "* Severity"
+      options:
+        - "Critical – Crash / data loss / security issue"
+        - "High – Major feature broken, no workaround"
+        - "Medium – Feature partially broken, workaround exists"
+        - "Low – Minor / cosmetic / typo"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: frequency
+    attributes:
+      label: "* How often does this occur?"
+      options:
+        - "Always (100%)"
+        - "Often (>50%)"
+        - "Sometimes (10–50%)"
+        - "Rarely (<10%)"
+        - "Only once"
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version / Build
+      placeholder: "e.g. v1.2.3"
+    validations:
+      required: false
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      multiple: true
+      options:
+        - Windows
+        - macOS
+        - Linux
+        - iOS
+        - Android
+        - Other
+    validations:
+      required: false
+
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Browser (if applicable)
+      multiple: true
+      options:
+        - Chrome
+        - Firefox
+        - Safari
+        - Edge
+        - Other
+        - Not applicable
+    validations:
+      required: false
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots / Logs
+      description: Drag-and-drop images or paste log output here.
+      placeholder: "Paste logs or attach screenshots..."
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Anything else we should know?
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Before Submitting
+      options:
+        - label: I have searched existing issues and this is not a duplicate.
+          required: true
+        - label: I have provided enough detail to reproduce this bug.
+          required: true
+        - label: I have not included any sensitive or private information.
+          required: true
