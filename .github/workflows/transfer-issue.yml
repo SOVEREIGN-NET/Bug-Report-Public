@@ -2,13 +2,16 @@ name: Transfer Bug Report to Sovereign Network
 
 on:
   issues:
-    types: [opened]
+    types: [opened, labeled]
 
 jobs:
   transfer-issue:
     runs-on: ubuntu-latest
-    # Only run if the issue has the "bug" label (set by the form)
-    if: contains(github.event.issue.labels.*.name, 'bug')
+    # Trigger on opened (form submission) OR when "bug" label is applied
+    # Prevents duplicate transfers if both events fire
+    if: |
+      (github.event.action == 'labeled' && github.event.label.name == 'bug') ||
+      (github.event.action == 'opened' && contains(github.event.issue.labels.*.name, 'bug'))
 
     steps:
       - name: Create issue in The-Sovereign-Network repo
