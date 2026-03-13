@@ -2,7 +2,7 @@ name: Transfer Bug Report to Sovereign Network
 
 on:
   issues:
-    types: [opened, labeled]
+    types: [labeled]
 
 permissions:
   issues: write
@@ -11,11 +11,18 @@ permissions:
 jobs:
   transfer-issue:
     runs-on: ubuntu-latest
-    if: |
-      (github.event.action == 'labeled' && github.event.label.name == 'bug') ||
-      (github.event.action == 'opened' && contains(toJson(github.event.issue.labels), '"bug"'))
+    if: github.event.label.name == 'bug'
 
     steps:
+      - name: Verify NEW_SECRET is configured
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "::error::NEW_SECRET is not set. Go to Settings → Secrets and variables → Actions and create a secret named NEW_SECRET with a PAT that has repo + project scope on The-Sovereign-Network."
+            exit 1
+          fi
+        env:
+          TOKEN: ${{ secrets.NEW_SECRET }}
+
       - name: Create issue in The-Sovereign-Network repo
         id: create_issue
         uses: actions/github-script@v7
@@ -83,6 +90,19 @@ jobs:
           script: |
             const issueNumber = context.payload.issue.number;
             const trackerUrl  = process.env.TRACKER_URL;
+
+            // Ensure the 'transferred' label exists in this repo before applying it
+            try {
+              await github.rest.issues.createLabel({
+                owner:       context.repo.owner,
+                repo:        context.repo.repo,
+                name:        'transferred',
+                color:       '0052cc',
+                description: 'Bug report transferred to internal tracker'
+              });
+            } catch (e) {
+              if (e.status !== 422) throw e; // 422 = label already exists, which is fine
+            }
 
             await github.rest.issues.createComment({
               owner:        context.repo.owner,
