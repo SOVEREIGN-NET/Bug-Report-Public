@@ -2,7 +2,7 @@ name: Transfer Bug Report to Sovereign Network
 
 on:
   issues:
-    types: [opened, labeled]
+    types: [labeled]
 
 permissions:
   issues: write
@@ -11,9 +11,7 @@ permissions:
 jobs:
   transfer-issue:
     runs-on: ubuntu-latest
-    if: |
-      (github.event.action == 'labeled' && github.event.label.name == 'bug') ||
-      (github.event.action == 'opened' && contains(toJson(github.event.issue.labels), '"bug"'))
+    if: github.event.label.name == 'bug'
 
     steps:
       - name: Create issue in The-Sovereign-Network repo
@@ -84,6 +82,19 @@ jobs:
             const issueNumber = context.payload.issue.number;
             const trackerUrl  = process.env.TRACKER_URL;
 
+            // Ensure the 'transferred' label exists in this repo before applying it
+            try {
+              await github.rest.issues.createLabel({
+                owner:       context.repo.owner,
+                repo:        context.repo.repo,
+                name:        'transferred',
+                color:       '0052cc',
+                description: 'Bug report transferred to internal tracker'
+              });
+            } catch (e) {
+              if (e.status !== 422) throw e; // 422 = label already exists, which is fine
+            }
+
             await github.rest.issues.createComment({
               owner:        context.repo.owner,
               repo:         context.repo.repo,
@@ -118,5 +129,5 @@ jobs:
               owner:        context.repo.owner,
               repo:         context.repo.repo,
               issue_number: issueNumber,
-              lock_reason:  'off-topic'
+              lock_reason:  'resolved'
             });
