@@ -14,6 +14,15 @@ jobs:
     if: github.event.label.name == 'bug'
 
     steps:
+      - name: Verify NEW_SECRET is configured
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "::error::NEW_SECRET is not set. Go to Settings → Secrets and variables → Actions and create a secret named NEW_SECRET with a PAT that has repo + project scope on The-Sovereign-Network."
+            exit 1
+          fi
+        env:
+          TOKEN: ${{ secrets.NEW_SECRET }}
+
       - name: Create issue in The-Sovereign-Network repo
         id: create_issue
         uses: actions/github-script@v7
@@ -129,5 +138,5 @@ jobs:
               owner:        context.repo.owner,
               repo:         context.repo.repo,
               issue_number: issueNumber,
-              lock_reason:  'resolved'
+              lock_reason:  'off-topic'
             });
