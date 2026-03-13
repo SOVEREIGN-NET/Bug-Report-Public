@@ -41,7 +41,7 @@ jobs:
 
             const result = await github.rest.issues.create({
               owner:  'SOVEREIGN-NET',
-              repo:   'The-Sovereign-Network',
+              repo:   'Sovereign-Network-Mobile',
               title:  issue.title,
               body:   body,
               labels: ['bug', 'triage', 'from-public'],
