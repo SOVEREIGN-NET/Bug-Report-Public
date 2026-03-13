@@ -11,18 +11,16 @@ permissions:
 jobs:
   transfer-issue:
     runs-on: ubuntu-latest
-    # Trigger on opened (form submission) OR when "bug" label is applied
-    # Prevents duplicate transfers if both events fire
     if: |
       (github.event.action == 'labeled' && github.event.label.name == 'bug') ||
-      (github.event.action == 'opened' && contains(github.event.issue.labels.*.name, 'bug'))
+      (github.event.action == 'opened' && contains(toJson(github.event.issue.labels), '"bug"'))
 
     steps:
       - name: Create issue in The-Sovereign-Network repo
         id: create_issue
         uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.NEW_SECRET }}
+          github-token: ${{ secrets.GITHUB_REPO_PAT }}
           script: |
             const issue = context.payload.issue;
 
@@ -47,10 +45,11 @@ jobs:
 
       - name: Add issue to Project board #5
         uses: actions/github-script@v7
+        env:
+          ISSUE_NODE_ID: ${{ steps.create_issue.outputs.issue_node_id }}
         with:
-          github-token: ${{ secrets.NEW_SECRET }}
+          github-token: ${{ secrets.GITHUB_REPO_PAT }}
           script: |
-            // Step 1: get the project node ID
             const projectQuery = await github.graphql(`
               query {
                 organization(login: "SOVEREIGN-NET") {
@@ -62,7 +61,6 @@ jobs:
             `);
             const projectId = projectQuery.organization.projectV2.id;
 
-            // Step 2: add the issue to the project
             await github.graphql(`
               mutation($projectId: ID!, $contentId: ID!) {
                 addProjectV2ItemById(input: { projectId: $projectId, contentId: $contentId }) {
@@ -71,20 +69,21 @@ jobs:
               }
             `, {
               projectId,
-              contentId: '${{ steps.create_issue.outputs.issue_node_id }}'
+              contentId: process.env.ISSUE_NODE_ID
             });
 
             core.info('Issue added to Project #5');
 
       - name: Comment on public issue and close it
         uses: actions/github-script@v7
+        env:
+          TRACKER_URL: ${{ steps.create_issue.outputs.issue_url }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const issueNumber = context.payload.issue.number;
-            const trackerUrl  = '${{ steps.create_issue.outputs.issue_url }}';
+            const trackerUrl  = process.env.TRACKER_URL;
 
-            // Thank the reporter and confirm receipt
             await github.rest.issues.createComment({
               owner:        context.repo.owner,
               repo:         context.repo.repo,
@@ -100,7 +99,6 @@ jobs:
               ].join('\n')
             });
 
-            // Label as transferred
             await github.rest.issues.addLabels({
               owner:        context.repo.owner,
               repo:         context.repo.repo,
@@ -108,7 +106,6 @@ jobs:
               labels:       ['transferred']
             });
 
-            // Close the public issue
             await github.rest.issues.update({
               owner:        context.repo.owner,
               repo:         context.repo.repo,
@@ -117,10 +114,9 @@ jobs:
               state_reason: 'not_planned'
             });
 
-            // Lock to prevent further comments
             await github.rest.issues.lock({
               owner:        context.repo.owner,
               repo:         context.repo.repo,
               issue_number: issueNumber,
-              lock_reason:  'resolved'
+              lock_reason:  'off-topic'
             });
